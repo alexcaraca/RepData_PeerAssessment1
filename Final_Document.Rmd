@@ -1,0 +1,89 @@
+---
+title: "Reproducible Research - Assessement 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(ggplot2)
+library(dplyr)
+
+```
+
+## Introduction
+
+This document pretends to summarize the questions raized within the scope of this assessement.
+
+## Code for reading in the dataset and/or processing the data
+
+As first step, the input file is read as a .csv. Also, the "date" field" is formatted as date.  
+```{r}
+setwd("~/ScriptsR/RepData_PeerAssessment1")
+Activity <- read.csv("activity.csv", sep = ",",
+                       header = TRUE, na.strings = "NA")
+dim(Activity)
+Activity$date <- as.Date(Activity$date, "%Y-%m-%d")
+
+```
+  
+## Histogram of the total number of steps taken each day  
+  
+In this step, the histogram with the total number of stpes taken each day is generated as follows:
+```{r}
+by_day_Activity <- group_by(Activity, date)
+Activity_by_day <- as.data.frame(summarise(by_day_Activity, sum.Steps = sum(steps, na.rm = TRUE)))
+g<-ggplot(Activity_by_day,aes(date,sum.Steps))
+g + geom_line() + labs(y = "Steps") + labs(x = "Date") + 
+  labs(title="Total Steps per Day")+theme(plot.title = element_text(hjust = 0.5))
+
+```
+  
+## Mean and median number of steps taken each day  
+   
+In the next step the mean and media steps per day are summarized:
+```{r}
+Activity_by_day2 <- group_by(Activity, date) %>% summarise(Mean.Steps = mean(steps, na.rm = TRUE), Median.Steps = median(steps, na.rm = TRUE))
+Activity_by_day2 <- as.data.frame(Activity_by_day2)
+Activity_by_day2
+
+```
+  
+As a remark the median for all the days is zero (when available for calculation).
+
+## Time series plot of the average number of steps taken
+  
+Now will be generated a plot with the average number of steps.  
+
+```{r}
+by_day_Activity <- group_by(Activity, date)
+Activity_by_day2 <- as.data.frame(summarise(by_day_Activity, Mean.Steps.1 = mean(steps, na.rm = TRUE)))
+g1<-ggplot(Activity_by_day2,aes(date,Mean.Steps.1))
+g1 + geom_line() + labs(y = "Mean of Steps") + labs(x = "Date") + 
+    labs(title="Mean Steps per Day")+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+
+
+
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

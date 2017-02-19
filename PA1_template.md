@@ -140,7 +140,7 @@ Activity_by_day2
   
 ## What is the average daily activity pattern?
   
-Total steps per day:
+Mean steps per day:
 
 ```r
 by_day_Activity3 <- group_by(Activity, date)
@@ -155,11 +155,51 @@ g2 + geom_line() + labs(y = "Mean of Steps") + labs(x = "Date") +
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+  
+5-minute interval with maximum number of steps:  
 
+```r
+Activity4<-Activity
+Activity4$interval <- as.factor(Activity4$interval)
+Activity4_by_interval <- group_by(Activity4, interval) %>% summarise(Mean.Steps.4 = mean(steps, na.rm = TRUE))
+Activity4_by_interval <- as.data.frame(Activity4_by_interval)
+Activity4_by_interval <- filter(Activity4_by_interval, Mean.Steps.4 == max(Mean.Steps.4))
+Activity4_by_interval
+```
 
+```
+##   interval Mean.Steps.4
+## 1      835     206.1698
+```
 
 ## Imputing missing values
 
+```r
+StepsAct<-Activity$steps
+summary(Activity$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    0.00   37.38   12.00  806.00    2304
+```
+
+```r
+summary(StepsAct)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    0.00   37.38   12.00  806.00    2304
+```
+
+```r
+mean(is.na(StepsAct))
+```
+
+```
+## [1] 0.1311475
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?

@@ -5,21 +5,110 @@ output:
     keep_md: true
 ---
 
-
+```{r, echo = FALSE, results='hide'}
+library(data.table)
+library(ggplot2)
+library(lattice)
+library(dplyr)
+library(timeDate)
+```
+  
 ## Loading and preprocessing the data
-
+  
+```{r}
+setwd("~/ScriptsR/RepData_PeerAssessment1")
+Activity <- read.csv("activity.csv", sep = ",",
+                       header = TRUE, na.strings = "NA")
+Activity$date <- as.Date(Activity$date, "%Y-%m-%d")
+names(Activity)
+class(Activity)
+dim(Activity)
+```
 
 
 ## What is mean total number of steps taken per day?
+  
+Total steps per day:
+```{r}
+by_day_Activity <- group_by(Activity, date)
+Activity_by_day <- as.data.frame(summarise(by_day_Activity, sum.Steps = sum(steps, na.rm = TRUE)))
+g1<-ggplot(Activity_by_day,aes(date, sum.Steps))
+g1 + geom_bar(stat = "identity") + labs(y = "Steps") + labs(x = "Date") + 
+    labs(title="Total Steps per Day")+theme(plot.title = element_text(hjust = 0.5))
+```
+  
+Mean and median steps per day:
+```{r}
+Activity_by_day <- group_by(Activity, date) %>% summarise(Mean.Steps = mean(steps, na.rm = TRUE), Median.Steps = median(steps, na.rm = TRUE))
+Activity_by_day <- as.data.frame(Activity_by_day)
+Activity_by_day
 
-
-
+```
+  
 ## What is the average daily activity pattern?
-
-
+  
+Mean steps per day:
+```{r}
+by_day_Activity <- group_by(Activity, date)
+Activity_by_day <- as.data.frame(summarise(by_day_Activity, Mean.Steps = mean(steps, na.rm = TRUE)))
+g2<-ggplot(Activity_by_day,aes(date,Mean.Steps))
+g2 + geom_line() + labs(y = "Mean of Steps") + labs(x = "Date") + 
+    labs(title="Mean Steps per Day")+theme(plot.title = element_text(hjust = 0.5))
+```
+  
+5-minute interval with maximum number of steps:  
+```{r}
+ActivityInt<-Activity
+ActivityInt$interval <- as.factor(ActivityInt$interval)
+Activity_by_interval <- group_by(ActivityInt, interval) %>% summarise(Mean.Steps = mean(steps, na.rm = TRUE))
+Activity_by_interval <- as.data.frame(Activity_by_interval)
+Activity_by_interval <- filter(Activity_by_interval, Mean.Steps == max(Mean.Steps))
+Activity_by_interval
+``` 
 
 ## Imputing missing values
 
+Replacing NA by the mean of the 5-minute interval:  
 
+```{r}
+StepsAct<-Activity$steps
+summary(StepsAct)
+mean(is.na(StepsAct))
+by_interval <- group_by(Activity, interval)
+Activity_by_interval <- as.data.frame(summarise(by_interval, Mean.Steps = mean(steps, na.rm = TRUE)))
+ActivityInt <- merge(Activity, Activity_by_interval, by= "interval")
+ActivityInt$steps <- ifelse (is.na(ActivityInt$steps), ActivityInt$Mean.Steps, ActivityInt$steps)
+ActivityInt <- arrange(ActivityInt, date, interval)
+StepsAct<-ActivityInt$steps
+summary(StepsAct)
+``` 
+  
+Mean and meadia after replacing NA:     
+```{r}
+Activity_by_day <- group_by(ActivityInt, date) %>% summarise(Mean.Steps = mean(steps, na.rm = TRUE), Median.Steps = median(steps, na.rm = TRUE))
+Activity_by_day <- as.data.frame(Activity_by_day)
+Activity_by_day
+```
+
+Histograma after replacing NA:  
+```{r}
+by_day_Activity <- group_by(ActivityInt, date)
+Activity_by_day <- as.data.frame(summarise(by_day_Activity, sum.Steps = sum(steps, na.rm = TRUE)))
+g1<-ggplot(Activity_by_day,aes(date, sum.Steps))
+g1 + geom_bar(stat = "identity") + labs(y = "Steps") + labs(x = "Date") + 
+    labs(title="Total Steps per Day")+theme(plot.title = element_text(hjust = 0.5))
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+  
+Plot with difference between weekdays and weekends:  
+```{r}
+ActivityWeek<-Activity
+ActivityWeek$week<-ifelse(isWeekday(ActivityWeek$date),"WeekDay","Weekend")
+ActivityWeek<-transform(ActivityWeek, week=factor(week))
+by_weekday_Activity <- group_by(ActivityWeek,week,interval)
+Activity_by_weekday <- as.data.frame(summarise(by_weekday_Activity, Mean.Steps = mean(steps, na.rm = TRUE)))
+g<-ggplot(Activity_by_weekday, aes(interval,Mean.Steps))
+g+facet_grid(week~.)+geom_line()
+``` 
+  
